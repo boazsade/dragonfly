@@ -5,27 +5,49 @@
 #include "core/string_set.h"
 
 #include <absl/numeric/bits.h>
+#include <absl/strings/escaping.h>
 
 #include "base/logging.h"
+#include "core/compact_object.h"  // for hashcode
+
+extern "C" {
+#include "redis/zmalloc.h"
+}
 
 namespace dfly {
 using namespace std;
 
 constexpr size_t kMinSizeShift = 2;
 constexpr size_t kMinSize = 1 << kMinSizeShift;
+constexpr size_t kAllowDisplacements = true;
+
+inline bool CanSetFlat(int offs) {
+  if (kAllowDisplacements)
+    return offs < 2;
+  return offs == 0;
+}
 
 StringSet::StringSet(pmr::memory_resource* mr) : entries_(mr) {
 }
 
 StringSet::~StringSet() {
   for (auto& entry : entries_) {
-    DCHECK(entry.next == nullptr || !entry.IsEmpty());
-
-    while (entry.next) {
-      Entry* tmp = entry.next;
-      entry.next = tmp->next;
-      tmp->Reset();
-      Free(tmp);
+    if (entry.IsLink()) {
+      LinkKey* lk = (LinkKey*)entry.get();
+      while (lk) {
+        sdsfree((sds)lk->ptr);
+        SuperPtr next = lk->next;
+        Free(lk);
+        if (next.IsSds()) {
+          sdsfree((sds)next.get());
+          lk = nullptr;
+        } else {
+          DCHECK(next.IsLink());
+          lk = (LinkKey*)next.get();
+        }
+      }
+    } else if (!entry.IsEmpty()) {
+      sdsfree((sds)entry.get());
     }
   }
   DCHECK_EQ(0u, num_chain_entries_);
@@ -39,13 +61,32 @@ void StringSet::Reserve(size_t sz) {
   entries_.reserve(sz);
 }
 
+size_t StringSet::SuperPtr::SetString(std::string_view str) {
+  sds sdsptr = sdsnewlen(str.data(), str.size());
+  ptr = sdsptr;
+  return zmalloc_usable_size(sdsAllocPtr(sdsptr));
+}
+
+bool StringSet::SuperPtr::Compare(std::string_view str) const {
+  if (IsEmpty())
+    return false;
+
+  sds sp = GetSds();
+  return str == string_view{sp, sdslen(sp)};
+}
+
 bool StringSet::Add(std::string_view str) {
+  DVLOG(1) << "Add " << absl::CHexEscape(str);
+
   uint64_t hc = CompactObj::HashCode(str);
 
   if (entries_.empty()) {
     capacity_log_ = kMinSizeShift;
     entries_.resize(kMinSize);
-    entries_[BucketId(hc)].value.SetString(str);
+    auto& e = entries_[BucketId(hc)];
+    obj_malloc_used_ += e.SetString(str);
+    ++size_;
+    ++num_used_buckets_;
 
     return true;
   }
@@ -61,9 +102,13 @@ bool StringSet::Add(std::string_view str) {
   // if utilization is too high.
   for (unsigned j = 0; j < 2; ++j) {
     int offs = FindEmptyAround(bucket_id);
-    if (offs < 2) {
+    if (CanSetFlat(offs)) {
       auto& entry = entries_[bucket_id + offs];
-      entry.value.SetString(str);
+      obj_malloc_used_ += entry.SetString(str);
+      if (offs != 0) {
+        entry.SetDisplaced();
+      }
+      ++num_used_buckets_;
       return true;
     }
 
@@ -74,38 +119,57 @@ bool StringSet::Add(std::string_view str) {
     bucket_id = BucketId(hc);
   }
 
-  // check displacement
-  // TODO: we could avoid checking computing HC if we explicitly mark displacement.
   auto& dest = entries_[bucket_id];
-  DCHECK(!IsEmpty(dest));
-  uint64_t hc2 = dest.value.HashCode();
-  uint32_t bid2 = BucketId(hc2);
+  DCHECK(!dest.IsEmpty());
+  if (dest.IsDisplaced()) {
+    sds sptr = dest.GetSds();
+    uint32_t nbid = BucketId(sptr);
+    Link(SuperPtr{sptr}, nbid);
 
-  if (bid2 != bucket_id) {
-    Link(std::move(dest.value), bid2);
-    dest.value.SetString(str);
+    if (dest.IsSds()) {
+      obj_malloc_used_ += dest.SetString(str);
+    } else {
+      LinkKey* lk = (LinkKey*)dest.get();
+      obj_malloc_used_ += lk->SetString(str);
+      dest.ClearDisplaced();
+    }
   } else {
-    Link(CompactObj{str}, bucket_id);
+    LinkKey* lk = NewLink(str, dest);
+    dest.SetLink(lk);
   }
+  DCHECK(!dest.IsDisplaced());
   return true;
 }
 
 unsigned StringSet::BucketDepth(uint32_t bid) const {
-  const Entry& e = entries_[bid];
-  if (e.IsEmpty()) {
-    DCHECK(!e.next);
+  SuperPtr ptr = entries_[bid];
+  if (ptr.IsEmpty()) {
     return 0;
   }
+
   unsigned res = 1;
-  const Entry* next = e.next;
-  while (next) {
+  while (ptr.IsLink()) {
+    LinkKey* lk = (LinkKey*)ptr.get();
     ++res;
-    next = next->next;
+    ptr = lk->next;
+    DCHECK(!ptr.IsEmpty());
   }
 
   return res;
 }
 
+auto StringSet::NewLink(std::string_view str, SuperPtr ptr) -> LinkKey* {
+  LinkAllocator ea(mr());
+  LinkKey* lk = ea.allocate(1);
+  ea.construct(lk);
+  obj_malloc_used_ += lk->SetString(str);
+  lk->next = ptr;
+  ++num_chain_entries_;
+
+  return lk;
+}
+
+#if 0
 void StringSet::IterateOverBucket(uint32_t bid, const ItemCb& cb) {
   const Entry& e = entries_[bid];
   if (e.IsEmpty()) {
@@ -120,21 +184,38 @@ void StringSet::IterateOverBucket(uint32_t bid, const ItemCb& cb) {
     next = next->next;
   }
 }
+#endif
 
-int StringSet::FindAround(std::string_view str, uint32_t bid) const {
-  const Entry* entry = entries_.data() + bid;
-  do {
-    if (entry->value == str) {
+inline bool cmpsds(sds sp, string_view str) {
+  if (sdslen(sp) != str.size())
+    return false;
+  return str.empty() || memcmp(sp, str.data(), str.size()) == 0;
+}
+
+int StringSet::FindAround(string_view str, uint32_t bid) const {
+  SuperPtr ptr = entries_[bid];
+
+  while (ptr.IsLink()) {
+    LinkKey* lk = (LinkKey*)ptr.get();
+    sds sp = (sds)lk->get();
+    if (cmpsds(sp, str))
       return 0;
-    }
-    entry = entry->next;
-  } while (entry);
+    ptr = lk->next;
+    DCHECK(!ptr.IsEmpty());
+  }
 
-  if (bid && entries_[bid - 1].value == str) {
+  if (!ptr.IsEmpty()) {
+    DCHECK(ptr.IsSds());
+    sds sp = (sds)ptr.get();
+    if (cmpsds(sp, str))
+      return 0;
+  }
+
+  if (bid && entries_[bid - 1].Compare(str)) {
     return -1;
   }
 
-  if (bid + 1 < entries_.size() && entries_[bid + 1].value == str) {
+  if (bid + 1 < entries_.size() && entries_[bid + 1].Compare(str)) {
     return 1;
   }
 
@@ -147,64 +228,141 @@ void StringSet::Grow() {
   ++capacity_log_;
 
   for (int i = prev_sz - 1; i >= 0; --i) {
-    Entry* root = entries_.data() + i;
-    if (root->IsEmpty()) {
-      DCHECK(!root->next);
+    SuperPtr* current = &entries_[i];
+    if (current->IsEmpty()) {
       continue;
     }
 
-    uint32_t bid = BucketId(root->value.HashCode());
-    if (bid != uint32_t(i)) {
-      // handle flat entry first.
-      int offs = FindEmptyAround(bid);
-      if (offs < 2) {
-        auto& entry = entries_[bid + offs];
-        DCHECK(!entry.next);
-        entry.value = std::move(root->value);
+    SuperPtr* prev = nullptr;
+    while (true) {
+      SuperPtr next;
+      LinkKey* lk = nullptr;
+      sds sp;
+
+      if (current->IsLink()) {
+        lk = (LinkKey*)current->get();
+        sp = (sds)lk->get();
+        next = lk->next;
       } else {
-        Link(std::move(root->value), bid);
+        sp = (sds)current->get();
       }
-      root->Reset();
+
+      uint32_t bid = BucketId(sp);
+      if (bid != uint32_t(i)) {
+        int offs = FindEmptyAround(bid);
+        if (CanSetFlat(offs)) {
+          auto& dest = entries_[bid + offs];
+          DCHECK(!dest.IsLink());
+
+          dest.ptr = sp;
+          if (offs != 0)
+            dest.SetDisplaced();
+          if (lk) {
+            Free(lk);
+          }
+          ++num_used_buckets_;
+        } else {
+          Link(*current, bid);
+        }
+        *current = next;
+      } else {
+        current->ClearDisplaced();
+        if (lk) {
+          prev = current;
+          current = &lk->next;
+        }
+      }
+      if (next.IsEmpty())
+        break;
     }
 
-    Entry* next = root->next;
-    Entry* prev = root;
-    while (next) {
-      uint32_t nbid = BucketId(next->value.HashCode());
-      if (nbid != uint32_t(i)) {
-        prev->next = next->next;
-        MoveEntry(next, nbid);
-      } else {
-        prev = next;
+    if (prev) {
+      DCHECK(prev->IsLink());
+      LinkKey* lk = (LinkKey*)prev->get();
+      if (lk->next.IsEmpty()) {
+        bool is_displaced = prev->IsDisplaced();
+        prev->ptr = lk->get();
+        if (is_displaced) {
+          prev->SetDisplaced();
+        }
+        Free(lk);
       }
-      next = prev->next;
     }
 
-    next = root->next;
-    if (root->IsEmpty() && next) {
-      root->value = std::move(next->value);
-      root->next = next->next;
-      Free(next);
+    if (entries_[i].IsEmpty()) {
+      --num_used_buckets_;
     }
+  }
+
+#if 0
+  unsigned cnt = 0;
+  for (auto ptr : entries_) {
+    cnt += (!ptr.IsEmpty());
+  }
+  DCHECK_EQ(num_used_buckets_, cnt);
+#endif
+}
+
+void StringSet::Link(SuperPtr ptr, uint32_t bid) {
+  SuperPtr& root = entries_[bid];
+  DCHECK(!root.IsEmpty());
+
+  bool is_root_displaced = root.IsDisplaced();
+
+  if (is_root_displaced) {
+    DCHECK_NE(bid, BucketId(root.GetSds()));
+  }
+  LinkKey* head;
+  void* val;
+
+  if (ptr.IsSds()) {
+    if (is_root_displaced) {
+      // in that case it's better to put ptr into root and move root data into its correct place.
+      sds val;
+      if (root.IsSds()) {
+        val = (sds)root.get();
+        root.ptr = ptr.get();
+      } else {
+        LinkKey* lk = (LinkKey*)root.get();
+        val = (sds)lk->get();
+        lk->ptr = ptr.get();
+        root.ClearDisplaced();
+      }
+      uint32_t nbid = BucketId(val);
+      DCHECK_NE(nbid, bid);
+
+      Link(SuperPtr{val}, nbid);  // Potentially unbounded wave of updates.
+      return;
+    }
+
+    LinkAllocator ea(mr());
+    head = ea.allocate(1);
+    ea.construct(head);
+    val = ptr.get();
+    ++num_chain_entries_;
+  } else {
+    head = (LinkKey*)ptr.get();
+    val = head->get();
+  }
+
+  if (root.IsSds()) {
+    head->ptr = root.get();
+    head->next = SuperPtr{val};
+    root.SetLink(head);
+    if (is_root_displaced) {
+      DCHECK_NE(bid, BucketId((sds)head->ptr));
+      root.SetDisplaced();
+    }
+  } else {
+    DCHECK(root.IsLink());
+    LinkKey* chain = (LinkKey*)root.get();
+    head->next = chain->next;
+    head->ptr = val;
+    chain->next.SetLink(head);
   }
 }
 
-void StringSet::Link(CompactObj co, uint32_t bid) {
-  Entry* dest = entries_.data() + bid;
-  DCHECK(!IsEmpty(*dest));
-
-  ++num_chain_entries_;
-
-  EntryAllocator ea(mr());
-  Entry* tail = ea.allocate(1);
-  ea.construct(tail);
-
-  // dest may hold object from a neighbour bucket id, hence we do not push further.
-  tail->next = dest->next;
-  dest->next = tail;
-  tail->value = std::move(co);
-}
-
+#if 0
 void StringSet::MoveEntry(Entry* e, uint32_t bid) {
   auto& dest = entries_[bid];
   if (IsEmpty(dest)) {
@@ -215,20 +373,27 @@ void StringSet::MoveEntry(Entry* e, uint32_t bid) {
   e->next = dest.next;
   dest.next = e;
 }
+#endif
 
 int StringSet::FindEmptyAround(uint32_t bid) const {
-  if (IsEmpty(entries_[bid]))
+  if (entries_[bid].IsEmpty())
     return 0;
 
-  if (bid + 1 < entries_.size() && IsEmpty(entries_[bid + 1]))
+  if (bid + 1 < entries_.size() && entries_[bid + 1].IsEmpty())
     return 1;
 
-  if (bid && IsEmpty(entries_[bid - 1]))
+  if (bid && entries_[bid - 1].IsEmpty())
     return -1;
 
   return 2;
 }
 
+uint32_t StringSet::BucketId(sds ptr) const {
+  string_view sv{ptr, sdslen(ptr)};
+  return BucketId(CompactObj::HashCode(sv));
+}
+
+#if 0
 uint32_t StringSet::Scan(uint32_t cursor, const ItemCb& cb) const {
   if (capacity_log_ == 0)
     return 0;
@@ -248,7 +413,7 @@ uint32_t StringSet::Scan(uint32_t cursor, const ItemCb& cb) const {
   if (it.entry_ == nullptr)
     return 0;
 
-  if (it.bucket_id_ == bucket_id + 1) { // cover displacement case
+  if (it.bucket_id_ == bucket_id + 1) {  // cover displacement case
     // TODO: we could avoid checking computing HC if we explicitly mark displacement.
     // we have plenty-metadata to do so.
     uint32_t bid = BucketId((*it).HashCode());
@@ -261,6 +426,63 @@ uint32_t StringSet::Scan(uint32_t cursor, const ItemCb& cb) const {
   return it.entry_ ? it.bucket_id_ << (32 - capacity_log_) : 0;
 }
 
+bool StringSet::Erase(std::string_view val) {
+  uint64_t hc = CompactObj::HashCode(val);
+  uint32_t bid = BucketId(hc);
+
+  Entry* current = &entries_[bid];
+
+  if (!current->IsEmpty()) {
+    if (current->value == val) {
+      current->Reset();
+      ShiftLeftIfNeeded(current);
+      --size_;
+      return true;
+    }
+
+    Entry* prev = current;
+    current = current->next;
+    while (current) {
+      if (current->value == val) {
+        current->Reset();
+        prev->next = current->next;
+        Free(current);
+        --size_;
+        return true;
+      }
+      prev = current;
+      current = current->next;
+    }
+  }
+
+  auto& prev = entries_[bid - 1];
+  // TODO: to mark displacement.
+  if (bid && !prev.IsEmpty()) {
+    if (prev.value == val) {
+      obj_malloc_used_ -= prev.value.MallocUsed();
+
+      prev.Reset();
+      ShiftLeftIfNeeded(&prev);
+      --size_;
+      return true;
+    }
+  }
+
+  auto& next = entries_[bid + 1];
+  if (bid + 1 < entries_.size()) {
+    if (next.value == val) {
+      obj_malloc_used_ -= next.value.MallocUsed();
+      next.Reset();
+      ShiftLeftIfNeeded(&next);
+      --size_;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+#endif
 
 void StringSet::iterator::SeekNonEmpty() {
   while (bucket_id_ < owner_->entries_.size()) {

@@ -21,6 +21,7 @@ extern "C" {
 
 #include "base/logging.h"
 #include "base/pod_array.h"
+#include "core/string_set.h"
 
 #if defined(__aarch64__)
 #include "base/sse2neon.h"
@@ -55,6 +56,11 @@ inline void FreeObjSet(unsigned encoding, void* ptr, pmr::memory_resource* mr) {
       dictRelease((dict*)ptr);
       break;
     }
+    case kEncodingStrMap2: {
+      delete (StringSet*)ptr;
+      break;
+    }
+
     case kEncodingIntSet:
       zfree((void*)ptr);
       break;
@@ -67,6 +73,10 @@ size_t MallocUsedSet(unsigned encoding, void* ptr) {
   switch (encoding) {
     case kEncodingStrMap /*OBJ_ENCODING_HT*/:
       return 0;  // TODO
+    case kEncodingStrMap2: {
+      StringSet* ss = (StringSet*)ptr;
+      return ss->obj_malloc_used() + ss->set_malloc_used();
+    }
     case kEncodingIntSet:
       return intsetBlobLen((intset*)ptr);
   }
@@ -257,6 +267,10 @@ size_t RobjWrapper::Size() const {
         case kEncodingStrMap: {
           dict* d = (dict*)inner_obj_;
           return dictSize(d);
+        }
+        case kEncodingStrMap2: {
+          StringSet* ss = (StringSet*)inner_obj_;
+          return ss->size();
         }
         default:
           LOG(FATAL) << "Unexpected encoding " << encoding_;
@@ -608,6 +622,7 @@ void CompactObj::ImportRObj(robj* o) {
       if (o->encoding == OBJ_ENCODING_INTSET) {
         enc = kEncodingIntSet;
       } else {
+        LOG(DFATAL) << "This can not be done via ImportRObj for sets";
         enc = kEncodingStrMap;
       }
     }
