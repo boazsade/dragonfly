@@ -39,8 +39,10 @@ struct ConnectionState {
   // For get op - we use it as a mask of MCGetMask values.
   uint32_t memcache_flag = 0;
 
-  // If it's a replication client - then it holds positive sync session id.
-  uint32_t sync_session_id = 0;
+  // If this server is master, and this connection is from a secondary replica,
+  // then it holds positive sync session id.
+  uint32_t repl_session_id = 0;
+  ShardId repl_shard_id = kInvalidSid;
 
   // Lua-script related data.
   struct Script {
@@ -52,7 +54,10 @@ struct ConnectionState {
 
   struct SubscribeInfo {
     // TODO: to provide unique_strings across service. This will allow us to use string_view here.
+    // channels - to which channels this connection is subscribed.
     absl::flat_hash_set<std::string> channels;
+
+    // to which patterns this connection is subscribed.
     absl::flat_hash_set<std::string> patterns;
 
     util::fibers_ext::BlockingCounter borrow_token;
@@ -78,8 +83,6 @@ class ConnectionContext : public facade::ConnectionContext {
       : facade::ConnectionContext(stream, owner) {
   }
 
-  void OnClose() override;
-
   struct DebugInfo {
     uint32_t shards_count = 0;
     TxClock clock = 0;
@@ -103,8 +106,6 @@ class ConnectionContext : public facade::ConnectionContext {
   void PUnsubscribeAll(bool to_reply);
 
   bool is_replicating = false;
-
-  std::string GetContextInfo() const override;
 
  private:
   void SendSubscriptionChangedResponse(std::string_view action,

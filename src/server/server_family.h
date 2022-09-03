@@ -102,6 +102,8 @@ class ServerFamily {
     return journal_.get();
   }
 
+  void OnClose(ConnectionContext* cntx);
+
  private:
   uint32_t shard_count() const {
     return shard_set->size();

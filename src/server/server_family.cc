@@ -623,6 +623,10 @@ void ServerFamily::PauseReplication(bool pause) {
   }
 }
 
+void ServerFamily::OnClose(ConnectionContext* cntx) {
+  dfly_cmd_->OnClose(cntx);
+}
+
 void ServerFamily::StatsMC(std::string_view section, facade::ConnectionContext* cntx) {
   if (!section.empty()) {
     return cntx->reply_builder()->SendError("");
@@ -915,7 +919,9 @@ void ServerFamily::Client(CmdArgList args, ConnectionContext* cntx) {
   if (sub_cmd == "SETNAME" && args.size() == 3) {
     cntx->owner()->SetName(ArgS(args, 2));
     return (*cntx)->SendOk();
-  } else if (sub_cmd == "LIST") {
+  }
+
+  if (sub_cmd == "LIST") {
     vector<string> client_info;
     fibers::mutex mu;
     auto cb = [&](util::Connection* conn) {
@@ -1382,8 +1388,10 @@ void ServerFamily::ReplConf(CmdArgList args, ConnectionContext* cntx) {
     if (cmd == "CAPA") {
       if (arg == "dragonfly" && args.size() == 3 && i == 1) {
         uint32_t sid = dfly_cmd_->AllocateSyncSession();
+        cntx->owner()->SetName(absl::StrCat("repl_ctrl_", sid));
+
         string sync_id = absl::StrCat("SYNC", sid);
-        cntx->conn_state.sync_session_id = sid;
+        cntx->conn_state.repl_session_id = sid;
 
         // The response for 'capa dragonfly' is: <masterid> <syncid> <numthreads>
         (*cntx)->StartArray(3);
@@ -1492,8 +1500,10 @@ void ServerFamily::Register(CommandRegistry* registry) {
             << CI{"REPLICAOF", kReplicaOpts, 3, 0, 0, 0}.HFUNC(ReplicaOf)
             << CI{"REPLCONF", CO::ADMIN | CO::LOADING, -1, 0, 0, 0}.HFUNC(ReplConf)
             << CI{"ROLE", CO::LOADING | CO::FAST | CO::NOSCRIPT, 1, 0, 0, 0}.HFUNC(Role)
-            << CI{"SYNC", CO::ADMIN | CO::GLOBAL_TRANS, 1, 0, 0, 0}.HFUNC(Sync)
-            << CI{"PSYNC", CO::ADMIN | CO::GLOBAL_TRANS, 3, 0, 0, 0}.HFUNC(Psync)
+            // We won't support DF->REDIS replication for now, hence we do not need to support
+            // these commands.
+            // << CI{"SYNC", CO::ADMIN | CO::GLOBAL_TRANS, 1, 0, 0, 0}.HFUNC(Sync)
+            // << CI{"PSYNC", CO::ADMIN | CO::GLOBAL_TRANS, 3, 0, 0, 0}.HFUNC(Psync)
             << CI{"SCRIPT", CO::NOSCRIPT, -2, 0, 0, 0}.HFUNC(Script)
             << CI{"DFLY", CO::ADMIN | CO::GLOBAL_TRANS, -2, 0, 0, 0}.HFUNC(Dfly);
 }
