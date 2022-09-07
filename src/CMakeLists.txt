@@ -10,6 +10,15 @@ add_third_party(
 )
 
 add_third_party(
+  lua_bitop
+  URL http://bitop.luajit.org/download/LuaBitOp-1.0.2.tar.gz
+  CONFIGURE_COMMAND echo
+  BUILD_COMMAND make -e "INCLUDES=-I${THIRD_PARTY_LIB_DIR}/lua/include"
+  BUILD_IN_SOURCE 1
+  DEPENDS lua_project
+)
+
+add_third_party(
   dconv
   URL https://github.com/google/double-conversion/archive/refs/tags/v3.2.0.tar.gz
   LIB libdouble-conversion.a
@@ -19,7 +28,7 @@ add_third_party(
   jsoncons
   URL https://github.com/danielaparker/jsoncons/archive/refs/tags/v0.168.7.tar.gz
   CMAKE_PASS_FLAGS "-DJSONCONS_BUILD_TESTS=OFF"
-  
+
   LIB "none"
 )
 
