@@ -1159,7 +1159,7 @@ bool Transaction::NotifySuspended(TxId committed_txid, ShardId sid) {
   return false;
 }
 
-void Transaction::BreakOnClose() {
+void Transaction::BreakOnShutdown() {
   if (coordinator_state_ & COORD_BLOCKED) {
     coordinator_state_ |= COORD_CANCELLED;
     blocking_ec_.notify();

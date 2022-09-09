@@ -749,7 +749,7 @@ class RdbSaver::Impl {
 
   error_code ConsumeChannel();
 
-  void StartSnapshotting(EngineShard* shard);
+  void StartSnapshotting(bool include_journal_changes, EngineShard* shard);
 
   error_code Flush() {
     return aligned_buf_.Flush();
@@ -835,10 +835,10 @@ error_code RdbSaver::Impl::ConsumeChannel() {
   return io_error;
 }
 
-void RdbSaver::Impl::StartSnapshotting(EngineShard* shard) {
+void RdbSaver::Impl::StartSnapshotting(bool include_journal_changes, EngineShard* shard) {
   auto s = make_unique<SliceSnapshot>(&shard->db_slice(), &channel_);
 
-  s->Start();
+  s->Start(include_journal_changes);
 
   // For single shard configuration, we maintain only one snapshot,
   // so we do not have to map it via shard_id.
@@ -895,8 +895,8 @@ error_code RdbSaver::SaveBody(RdbTypeFreqMap* freq_map) {
   return error_code{};
 }
 
-void RdbSaver::StartSnapshotInShard(EngineShard* shard) {
-  impl_->StartSnapshotting(shard);
+void RdbSaver::StartSnapshotInShard(bool include_journal_changes, EngineShard* shard) {
+  impl_->StartSnapshotting(include_journal_changes, shard);
 }
 
 error_code RdbSaver::SaveAux(const StringVec& lua_scripts) {

@@ -81,7 +81,8 @@ class RdbSaver {
   std::error_code SaveBody(RdbTypeFreqMap* freq_map);
 
   // Initiates the serialization in the shard's thread.
-  void StartSnapshotInShard(EngineShard* shard);
+  // TODO: to implement break functionality to allow stopping early.
+  void StartSnapshotInShard(bool include_journal_changes, EngineShard* shard);
 
  private:
   class Impl;

@@ -13,6 +13,8 @@ extern "C" {
 
 #include "base/logging.h"
 #include "server/db_slice.h"
+#include "server/engine_shard_set.h"
+#include "server/journal/journal.h"
 #include "server/rdb_save.h"
 #include "util/fiber_sched_algo.h"
 #include "util/proactor_base.h"
@@ -25,15 +27,14 @@ using namespace chrono_literals;
 namespace this_fiber = ::boost::this_fiber;
 using boost::fibers::fiber;
 
-SliceSnapshot::SliceSnapshot(DbSlice* slice, RecordChannel* dest)
-    : db_slice_(slice), dest_(dest) {
+SliceSnapshot::SliceSnapshot(DbSlice* slice, RecordChannel* dest) : db_slice_(slice), dest_(dest) {
   db_array_ = slice->databases();
 }
 
 SliceSnapshot::~SliceSnapshot() {
 }
 
-void SliceSnapshot::Start() {
+void SliceSnapshot::Start(bool include_journal_changes) {
   DCHECK(!fb_.joinable());
 
   auto on_change = [this](DbIndex db_index, const DbSlice::ChangeReq& req) {
@@ -42,6 +43,11 @@ void SliceSnapshot::Start() {
 
   snapshot_version_ = db_slice_->RegisterOnChange(move(on_change));
   VLOG(1) << "DbSaver::Start - saving entries with version less than " << snapshot_version_;
+
+  if (include_journal_changes) {
+    journal_cb_id_ = db_slice_->shard_owner()->journal()->RegisterOnChange(
+        [](const journal::Entry& e) { LOG(INFO) << "change entry " << e.key; });
+  }
   sfile_.reset(new io::StringFile);
 
   rdb_serializer_.reset(new RdbSerializer(sfile_.get()));
@@ -49,6 +55,7 @@ void SliceSnapshot::Start() {
   fb_ = fiber([this] {
     FiberFunc();
     db_slice_->UnregisterOnChange(snapshot_version_);
+    db_slice_->shard_owner()->journal()->Unregister(journal_cb_id_);
   });
 }
 

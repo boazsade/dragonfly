@@ -49,9 +49,10 @@ string GetString(EngineShard* shard, const PrimeValue& pv) {
   return res;
 }
 
-inline void RecordJournal(const OpArgs& op_args, const PrimeKey& pkey, const PrimeKey& pvalue) {
+inline void RecordJournal(const OpArgs& op_args, string_view key, const PrimeKey& pvalue) {
   if (op_args.shard->journal()) {
-    op_args.shard->journal()->RecordEntry(op_args.txid, pkey, pvalue);
+    journal::Entry entry{op_args.db_ind, op_args.txid, key, pvalue};
+    op_args.shard->journal()->RecordEntry(entry);
   }
 }
 
@@ -60,7 +61,7 @@ void SetString(const OpArgs& op_args, string_view key, const string& value) {
   auto [it_output, added] = db_slice.AddOrFind(op_args.db_ind, key);
   it_output->second.SetString(value);
   db_slice.PostUpdate(op_args.db_ind, it_output);
-  RecordJournal(op_args, it_output->first, it_output->second);
+  RecordJournal(op_args, key, it_output->second);
 }
 
 string JsonType(const json& val) {
