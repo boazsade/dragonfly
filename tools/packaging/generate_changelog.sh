@@ -19,9 +19,9 @@ GIT_DIR=$1
 PACKGE_DIR=${THIS_DIR}/debian
 CHANGE_LOG=${PACKGE_DIR}/changelog
 cd ${GIT_DIR}
-has_tags=$(git tag -l v* | wc -l 2>/dev/null)
 git config --global --add safe.directory ${GIT_DIR}
-if [ "$has_tags" = "" ]; then
+has_tags=$(git tag -l v* | wc -l 2>/dev/null)
+if [ "$has_tags" = "" -o "$has_tags" = "0" ]; then
 	git fetch --all --tags || {
 		echo "failed to fetch tags, cannot build changelog file"
 		exit 1
