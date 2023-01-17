@@ -1,0 +1,463 @@
+dragonfly (0.14.0) unstable; urgency=low
+  * feat(test): this is a test
+  * feat(set family): rewrite set store commands to journal (#691)
+  * fix(server): Fix connection bug (#695)
+  * feat(build): debian package building (#689)
+  * fix(server): Convert Heartbeat from a periodic task to a fiber (#690)
+  * feat(server): Rewrite journal commands (basic) (#651)
+  * fix(server): fix the bug where DF went over maxmemory limit  (#683)
+  * chore(facade): speed up request allocation in pipeline mode (#682)
+  * fix(test): reduce flakiness of tiered_storage_test (#684)
+  * fix(core): Fix compact object bug (#680)
+  * feat(server): Buffered streamer + use on stable state (#639)
+  * test(rdb): Add json dump & restore test (#678)
+  * test(replication_test) : add replica flushall test (#669)
+  * fix(server): Fix replication on a single thread (#676)
+  * fix(tests): Small pytest fixes (#673)
+  * feat(server): disable EvictObjects that is too agressive
+  * fix(server): Fix a bug with brpoplpush (#677)
+  * feat(server): Json rdb support (#674)
+  * fix(server): Fix shutdown order (#675)
+  * bug(snapshot): on journal write entry with opcode COMMAND and MULTI_C… (#662)
+  * feat(server): Support brpoplpush for two shard case.
+  * feat(server): Implement brpoplpush for single shard case.
+  * chore(server): list_family refactoring.
+  * feat(server family): impl ROLE command (#660)
+  * fix: improvements to caching tool
+  * fix(build): verify build image for releases (#664)
+  * Pytests overhaul (#569)
+  * bug(replica): multi command on single shard exec all commands (#661)
+  * feat(replica): enable multi cmd sync on flag (#656)
+  * feat(server family): reject flushall and flushdb on multi command (#657)
+  * fix(server): Flush dbs before full sync (#659)
+  * fix(server): Fix db initialization in stable state (#658)
+  * fix(server): Fix bug in flushing in snapshot (#654)
+  * feat(helio): pull blocking counter fix (#655)
+  * feat(replica): support multi shard commands new flow (#645)
+  * chore(server): snapshot stats fix (#653)
+  * fix(lua): fix a bug that truncates the last lua argument. (#652)
+  * feat(tools): Add Zipfian cache testing tool (#640)
+  * Update README.md (#633)
+  * feat(container): make healthcheck tls compatible (#643)
+  * feat(chart): add feature to generate/request TLS certificate through cert-manager (#644)
+  * feat(replica): support multi transaction command (#634)
+  * chore(server): Add metrics (#638)
+  * chore(helm-chart): update to v0.13.1
+
+ -- Boaz Sade <boaz@dragonflydb.io>  Tue, 17 Jan 2023 12:16:39 +0200
+
+dragonfly (0.13.1) unstable; urgency=low
+  * fix(server): version check bugs (#632)
+  * Update README.md (#631)
+  * chore(helm-chart): update to v0.13.0
+
+ -- Roman Gershman <roman@dragonflydb.io>  Mon, 2 Jan 2023 11:43:06 +0200
+
+dragonfly (0.13.0) unstable; urgency=low
+  * feat(server): using memory defrag with per shard mem info (#616)
+  * fix(server): only print version if successfully connect. (#628)
+  * feat(server): Update helio, optimize and clean up rdb/snapshot (#625)
+  * feat(server): Buffered journal serializers (#619)
+  * Cache logs player batching (#623)
+  * chore: overhaul chart (#620)
+  * feat(ci test): add testing for helm chart (#622)
+  * feat(tools):cache log player batching all the way optimisation (#617)
+  * docs(quickstart): Clarify docker command for macOS (#612)
+  * fix(tools): cache logs player handle append as redis append (#615)
+  * feat(tools):Cache logs player (#614)
+  * chore: Add tiered_storage_test. (#613)
+  * fix(server):set of existing object with expiry (issue#607) (#609)
+  * feat(replica): atomicity for multi shard commands (#598)
+  * feat(server): Improved cancellation (#599)
+  * feat(server): track hits and misses stats. (#608)
+  * life of a transaction (#278)
+  * feat: build and publish weekly alpha/development container image
+  * chore(server): upgrade mimalloc for v2.0.7
+  * fix(server): defrag unit test fix
+  * feat(replica): Support FlushDB command for replication #580 (#591)
+  * feat(server): adding version monitoring task (#586)
+  * feat(server): integrate string_map into rdb code to support save/load
+  * feat(server): Integrate set_map into hset_family
+  * feat(server): Extend string_map api, fix AddOrSet method.
+  * feat(core): Add StringMap data structure.
+  * feat(server): Redesign and simplify tiered storage module. (#589)
+  * fix(chart): probe indentation (#590)
+  * feat(server): Use new journal format (#563)
+  * fix: handle corner case when comitted memory is negative (#570)
+  * fix: choose an appropriate SIMD implementation for aarch64 (#579)
+  * chore: Improve the implementation of simd based packing (#577)
+  * bug(rdb load): Rdb loader tasks stop running on failure #567 (#576)
+  * feat: implement ascii_unpack using SIMD instructions (#573)
+  * feat: introduce simd algorithm for bitpacking (#568)
+  * chore: Adding a mpsc intrusive queue based on Vyukov's design (#562)
+  * chore: Refactor RdbLoad (#564)
+  * feat(server): New auto-journal types/read/write (#560)
+  * feat(server): JSON family using JSON type (#561)
+  * feat(server): active memory defrag test application (#552)
+  * Support offloading of blobs longer than 2KB (#559)
+  * added example of start script (#557)
+  * feat(ci test): add build and test on release mode (#556)
+  * feat(server): Implement robust error & cancellation on replica (#531)
+  * chore: Update helio dependency (#555)
+  * chore: Update helio dependency (#553)
+  * feat(server): json set type support (#546)
+  * Support lz4 compression (#545)
+  * feat: add healtcheck for container (#544)
+  * fix(helm): Chart.yaml - Add home, keywords, sources, kubeVersion (#542)
+  * feat(rdb save): Create compressor interface (#538)
+  * chore(helm-chart): update to v0.12.0
+
+ -- Boaz Sade <boaz@dragonflydb.io>  Sun, 1 Jan 2023 18:50:57 +0200
+
+dragonfly (0.12.0) unstable; urgency=low
+  * fix(github): add libzstd-dev dep to aarch64 release pipeline (#539)
+  * feat(rdb save): add Lz4Compressor (#536)
+  * feat(server): defrag memory counter for total memory access (#537)
+  * feat(rdb save): refactor move zstd serializer under rdb serializer (#533)
+  * feat(server): adding matrices for memory defrag (#535)
+  * feat: add defrag support for small strings (#534)
+  * bug(rdb save): snapshot: on push data to channel check serializer len (#532)
+  * bug(debug cmd): debug populate support random value population (#527)
+  * feat(server): memory defrag support - unit tests added to verify #448 (#523)
+  * chore: Add lz4 to the source dependency (#528)
+  * refactor(server): Refactor snapshot (#520)
+  * bug(rdb loader): When reading from zstd uncompressed buf skip ensure … (#525)
+  * feat(regression test): add timeout cpu info and inc frequecy (#524)
+  * fix: Use dev image for running regression tests (#521)
+  * feat(server): acrtive memory defrag high level flow
+  * feat(rdb save): serializer flush to sink only on flush call (#519)
+  * feat(rdb save): add unit test to save df with all compression levels (#517)
+  * feat(rdb save): add blob compression on snapshot (#505)
+  * bug(server): exit not crash when port in use (#516)
+  * fix(server): Fix replication bug, add gdb opt to pytest (#513)
+  * chore: tiered_storage - cleanups and refactorings. (#515)
+  * feat(server): implement json.set command (#104) (#514)
+  * fix(server): Increase common abstraction usage (#511)
+  * feat(server): Replication errors & cancellation (#501)
+  * fix: clang warnings. (#508)
+  * fix(server): Fix lambda capture in RunInParallel functions (#507)
+  * fix(server): all scan commands needs to return cursor as bulk string #503 (#504)
+  * feat(io): pull new helio dependency (#506)
+  * feat(server): Switch to stable state replication (#473)
+  * feat(actions): push helm chart as OCI image (#500)
+  * fix(server): Fix db_slice insertion bug with callbacks (#499)
+  * fix(test): skip pytest test_simple_full_sync_mutli_crash due to crash (#497)
+  * A dedicated github actions pipeline that build dragonfly and runs pyt… (#490)
+  * fix: Fix bugs around rdb save and improve memory accounting (#495)
+  * fix(server): Handle data directory errors (#494)
+  * feat: Add last_save_duration_sec metric (#493)
+  * chore: Rename DoFlush to Drakaris. (#489)
+  * chore(helm-chart): update to v0.11.0
+
+ -- Roman Gershman <roman@dragonflydb.io>  Tue, 6 Dec 2022 21:19:15 +0200
+
+dragonfly (0.11.0) unstable; urgency=low
+  * feat(server family): add connection set name command fixes #458 (#485)
+  * feat(server): implement json.resp command (#104) (#482)
+  * fix(server): Fix path concatenation in save (#481)
+  * fix: DCHECK_NOTNULL gets WARNING when return value is not used. (#483)
+  * feat(server): add support for KEEPTTL options with SET command #389 (#478)
+  * fix(server): Fix snapshot saving bug (#479)
+  * fix(server): Fix bad maxmemory casting (#477)
+  * fix: maxmemory flag support human-readable format (#476)
+  * bug(dense set): fix scan function to return only home bucket data (#474)
+  * SSCAN command support count and match parameters (#466)
+  * fix(server): issue with invalid command inside multi #468 (#469)
+  * feat(server): implement json.debug command (#104) (#463)
+  * fix(server): reject eval inside transaction multi blocks #457 (#471)
+  * refactor(server): Refactor replica (#472)
+  * feat(server): simplify handling of the pub message handling (#465)
+  * server: implemented json.arrappend command (#460)
+  * feat(server) implement pexpire command (#464)
+  * feat(server): Basic capped full sync (#440)
+  * feat(tests): ioredis being able to successfully run tests, make it ready to be part of CI (#459)
+  * ci: added clang pre-commit hook (#461)
+  * fix(list): Fixes blpop failure. (#462)
+  * feat(server): Support for LIMIT and REV in ZRANGE #422 (#456)
+  * feat(server): implement json.mget command (#104) (#455)
+  * feat(server): implement TOUCH command (#444)
+  * docs(build): Canonicalize build from source instructions. Add CLA terms (#454)
+  * refactor(tests): Refactor pytest (#449)
+  * fix: "wrong number of arguments" must be in lower case (#439)
+  * feat(server): monitor command - cover by tests (#435)
+  * fix: dragonfly compilation failure due to glibc version less than 2.30 (#434)
+  * refactor(server): Separate start & stop in rdb save (#437)
+  * feat(server): monitor command should return OK on creation (#344) (#433)
+  * refactor(server): Refactor and tidy dflycmd (#432)
+  * feat(server): Multi rdb load (#430)
+  * Monitor command (#427)
+  * feat(server): Allow sampling arena stats from a specified thread (#428)
+  * ci(workflow): fixing discord notification link (#419)
+  * feat(server): sending and dispatching of messages using different internals (#424)
+  * chore(helm-chart): update to v0.10.0
+
+ -- adiholden <117041239+adiholden@users.noreply.github.com>  Sun, 13 Nov 2022 17:54:37 +0200
+
+dragonfly (0.10.0) unstable; urgency=low
+  * fix(hset): fix hset match bug (#411)
+  * docs(server): Update the API status, README and LICENSE date (#410)
+  * fix(server): remove double decrement of obj_memory_usage. (#406)
+  * feat(server): Implement DFLY EXPIRE command (#404)
+  * Update dependency list in README.md (#403)
+  * Update README.md (#399)
+  * fix some typos (#398)
+  * feat(server): support restore command - refactor load class (#343) (#386)
+  * chore(tests): adds support for ioredis integration tests + instructio… (#394)
+  * feat(server): Implement GETEX command #385 (#387)
+  * feat(server): implement LMOVE #369 (#391)
+  * feat(server): implement json.arrindex command (#104) (#376)
+  * chore(server): Refactor expire functionality and move it to DbSlice (#388)
+  * feat(server): Implement ZPOPMIN and ZPOPMAX #358 #359 (#378)
+  * feat(server): implement json.arrinsert command (#104) (#372)
+  * fix(server): support for dump command, API update #343 (#371)
+  * feat(server): Implement LPOS command #368 (#379)
+  * feat(server): Implement SMISMEMBER command (#377)
+  * feat(server): implement json.arrtrim command (#104) (#373)
+  * build(ci): add discord message on docker release (#375)
+  * chore(server): Improve malloc-stats output (#370)
+  * chore(helm-chart): update to v0.9.1
+  * feat(server): Add GETDEL command (#365)
+  * feat(server): implement json.arrpop command (#104) (#362)
+  * feat(server): Implement ZMSCORE command #357 (#367)
+
+ -- Roman Gershman <roman@dragonflydb.io>  Thu, 20 Oct 2022 14:16:16 +0300
+
+dragonfly (0.9.1) unstable; urgency=low
+  * fix(epoll): pull newest helio dependency (#366)
+  * chore(test): Allow running tests with epoll proactor (#364)
+  * feat(server): Implement MEMORY MALLOC-STATS command (#363)
+  * chore(helm-chart): update to v0.9.0
+
+ -- Roman Gershman <roman@dragonflydb.io>  Fri, 7 Oct 2022 10:35:43 +0300
+
+dragonfly (0.9.0) unstable; urgency=low
+  * feat(server): support for persist command #345 (#354)
+  * feat(server): implement json.strappend & json.clear commands (#104) (#353)
+  * feat(server): support epoll linux api (#351)
+  * fix(server): hscan command better support #347 (#350)
+  * chore(server): Add more logging in case of check fail
+  * fix(server): better support for the --help option (#349)
+  * feat(setfamily): Add SADDEX command (#348)
+  * chore(server): reduce iouring exposure across the codebase (#342)
+  * chore(hset): Get rid of helper functions in header file. (#341)
+  * Add expiry semantics to the set. (#340)
+  * chore(denseset): Simplify DenseSet, remove empty links. (#339)
+  * feat(server): zrange family command support INF as case insensitive #326 (#336)
+  * chore(DenseSet): Some code reorder without change in functionality. (#338)
+  * feat(server): Enforce decomitting memory pages upon flushdb call (#337)
+  * feat(server): support for bitop command -  unit tests added #213 (#319)
+  * feat(server): implement json.objkeys command (#104) (#327)
+  * fix(server): dfly_main.cc now compiled with march=core2. (#328)
+  * feat(server): Introduce transaction clock.
+  * chore(redis): remove noisy warnings.
+  * fix(server): Fix ContainerEntry union initialization (#323)
+  * feat(server): SORT command prototype (#311)
+  * fix(bug): dashtable split crashes when moving items from the old segment (#318)
+  * feat(packaging): create deb packaging #249 (#313)
+  * chore(server): rdb save can now save into tcp socket directly. (#317)
+  * feat(server): bitcount commands support and unit tests
+  * chore(server): update license text (#312)
+  * feat(docs): Update broken link to grafana dashboard (#314)
+  * feat(server): Implement MOVE command (#298)
+  * feat(server): adding support for EXAT PXAT option at set command (#306)
+  * Added more useful flags to the flags section (#305)
+  * chore(helm-chart): update to v0.8.0
+  * feat(server): adding support for bitops #213 (#295)
+
+ -- Boaz Sade <boaz1sade@gmail.com>  Tue, 4 Oct 2022 15:53:18 +0300
+
+dragonfly (0.8.0) unstable; urgency=low
+  * fix(rdb): Fix RDB load bug when loading hset
+  * feat(server): implement json.del command (#239) (#262)
+  * docs(server): readability cleanup (#304)
+  * fix(server): Added RDB load / save for DenseSet (#297)
+  * docs(src/core): readability improvements (#293)
+  * chore(server): Fix clang warnings and errors (#290)
+  * feat(core): Added DenseSet and StringSet types (#268)
+  * docs(api): Update api_status.md (#285)
+  * feat(server): Watch & Unwatch commands (#277)
+  * feat(server): support for setnx command #281 (#283)
+  * fix(server): Fix QUIT not shutting down connection (#280)
+  * feat: Change tls command line argument to conform with Redis (#276)
+  * chore(helm-chart): update to v0.7.0
+
+ -- Roman Gershman <roman@dragonflydb.io>  Sun, 18 Sep 2022 13:15:39 +0300
+
+dragonfly (0.7.0) unstable; urgency=low
+  * feat(core): Add lua modules (#273)
+  * fix(server): fix a potential bug of loosing changes with multiple concurrent snapshots
+  * fix(server): Fix break callback handling in case of thread migrations.
+  * feat(replication): Extend replication handshake protocol to support DF->DF replication.
+  * feat(rdb): Allow producing multiple rdb files when creating a snapshot.
+  * chore(rdb): refactor and some clean-ups of rdb code
+  * docs(rdb): More work on the rdb snapshotting document.
+  * docs(rdb): Add rdbsave high level design.
+  * chore(set): minor cleanups and refactorings. (#260)
+  * feat(server): implement json.numincrby (#240) (#252)
+  * feat(server): implement JSON.TOGGLE & JSON.ARRLEN & JSON.OBJLEN commands (#228)
+  * feat(server): implement JSON.STRLEN & JSON.TYPE commands (#225)
+  * feat(server): implement JSON.GET command (#104)
+  * chore(json): Add more jsoncons tests
+  * chore(json): low level parsing function
+  * chore(json): Add more unit tests.
+  * Add jsoncons library as third-party dependency
+  * feat(server): tighten memory checks when inseting a new object. (#258)
+  * feat(server): Implemented periodic snapshotting (#161) (#250)
+  * docs(server): Start DF shared nothing design document.
+  * feat(server): Implement STICK command #219 (#245)
+  * feat(monitoring): Add docker-compose for local monitoring dashboard. (#246)
+  * fix(server): Fix unrelevant error message when using UDS.
+  * Move assets to static (#247)
+  * fix:change statis assets url for http monitoring page (#243)
+  * fix(rdb): add error msg when rejecting the rdb version.
+  * fix(doc): add more examples on how to run node-redis test image
+  * docs: Update README.md twitter handle (#242)
+  * feat(test): Add integration test for the jedis and node-redis clients (#233)
+  * docs: Improve wording in issue reporting (#232)
+  * fix: RENAMENX according to spec #229 (#230)
+  * feat(server): support unix sockets.
+  * chore(server): add updateval_amount statistic.
+  * chore(helm-chart): update to v0.6.0
+
+ -- Vladislav <vladislav.oleshko@gmail.com>  Thu, 8 Sep 2022 14:31:27 +0300
+
+dragonfly (0.6.0) unstable; urgency=low
+  * fix(build): Fixes #220.
+  * docs(README): minor fix
+  * fix(server): add gitsha to version output. (#217)
+  * feat(server): add pidfile parameter (#209)
+  * fix(pytest): Minor fixes
+  * fix(bench): Improvements to dash_bench
+  * feat(journal): Introduce basic journal support. (#211)
+
+ -- Roman Gershman <roman@dragonflydb.io>  Thu, 28 Jul 2022 10:13:36 +0300
+
+dragonfly (0.5.0) unstable; urgency=low
+  * fix(server): Fix #207 (#208)
+  * test: flush all records between pytest tests #199 (#205)
+  * feat: Print out dragonfly version and build on startup #202 (#203)
+  * [WIP] test: add dragonfly_db fixture to python tests #199 (#204)
+  * docs(README): Document hz flag (#201)
+  * fix(server): setup sigill handler (#183) (#198)
+  * fix(server): exit gracefully when iouring not supported (#197)
+  * chore(server): improve error logging if info command fails. (#196)
+  * doc(quick-start): add note for known issues (#194)
+  * chore(presubmit): add more useful hooks
+  * chore(rdb): Move object creation during load operation to shard threads. (#193)
+  * fix(action): switch git push to dedicated action (#192)
+  * chore(helm-chart): update to v0.4.0
+
+ -- Roman Gershman <romange@gmail.com>  Fri, 15 Jul 2022 15:14:20 +0300
+
+dragonfly (0.4.0) unstable; urgency=low
+  * chore(pubsub): update api status (#189)
+  * chore(rdb): move object creation during loading to shard threads. (#188)
+  * chore(dash): add dashtable benchmark. (#187)
+  * feat(pubsub): implement pubsub command close #90 (#175)
+  * fix(server): Fix serialization logic when returning an empty array.
+  * fix(server): Fix a crash when running "client list" command. (#179)
+  * chore(server): Improve the implementation of SendStringArr. (#178)
+  * docs(docker-compose): Explain `NAT` overhead in docker-compose  (#176)
+  * fix(docker-compose): Fetch actual Docker Compose file and add memlock conf to service (#173)
+  * feat(actions): bump helm-chart version when new container image is published (#162)
+  * chore(strings): Simplify Set flow (#164)
+  * feat(stream): implement rdb save support for streams
+
+ -- Roman Gershman <romange@gmail.com>  Mon, 4 Jul 2022 20:15:27 +0300
+
+dragonfly (0.3.1) unstable; urgency=low
+  * chore(doc): add dragonfly/memcached benchmark to README
+  * feat(streams): implement rdb load for streams
+  * fix(zmalloc): fix memory accounting of redis types
+  * fix(parser): Raise parser limit for array length from 8K to 64K (#158)
+  * fix(lua): Fix few lua-related bugs (#157)
+  * chore(actions): fix docker release pipeline
+  * chore(server): Usability improvements
+  * fix(transaction): Fix rare deadlock case - fixes #150. (#155)
+  * chore(issues): Add issue templates with links to Discord/Discussions (#152)
+  * docs(readme): Add Discord Channel and Community Link Bar (#151)
+  * fix(zset): Properly convert non-c strings to floats.
+  * chore(zset): add additional logs for parse errors
+  * fix(lua): Avoid infinite loop and fix sha compatibility with redis.
+  * fix(actions): Fix pre-release docker pipeline
+
+ -- Roman Gershman <roman@dragonflydb.io>  Fri, 17 Jun 2022 16:10:08 +0300
+
+dragonfly (0.3.0-alpha) unstable; urgency=low
+
+
+ -- Acheev Bhagat <acheevbhagat@hotmail.com>  Sun, 12 Jun 2022 14:25:09 -0400
+
+dragonfly (0.3.0) unstable; urgency=low
+  * chore(server): Usability improvements
+  * fix(transaction): Fix rare deadlock case - fixes #150. (#155)
+  * chore(issues): Add issue templates with links to Discord/Discussions (#152)
+  * docs(readme): Add Discord Channel and Community Link Bar (#151)
+  * fix(zset): Properly convert non-c strings to floats.
+  * chore(zset): add additional logs for parse errors
+  * fix(lua): Avoid infinite loop and fix sha compatibility with redis.
+  * fix(actions): Fix pre-release docker pipeline
+  * feat(server): Add support for CPU to Info family of commands (fixes #18) (#143)
+  * implement partial streams API (#141)
+  * fix(parser): Fix wrong parsing of nested arrays. (#140)
+  * fix(zset): fixed zrevrange support of WITHSCORES.
+  * docs(PR Template): Add PR Template Enforcing Conventional Commits #107 (#137)
+  * feat(community): Add Conventional Commits; Code of Conduct #107 (#133)
+  * feat(docker-compose): Add `docker-compose.yml` #100 (#130)
+  * Reduce scope of HELLO implementation (#129)
+  * Implement basic XADD, XRANGE, XLEN commands.
+  * Introduce the initial skeleton code for stream routines
+  * chore(actions): Minor improvements to the release scripts.
+
+ -- Roman Gershman <roman@dragonflydb.io>  Wed, 15 Jun 2022 19:19:59 +0300
+
+dragonfly (0.2.0) unstable; urgency=low
+  * Stability fixes to PUBSUB code
+  * Use sum instead of individual counts for channels/patterns (#119)
+  * Support Pubsub (P)UNSUBSCRIBE commands without arguments (#117)
+  * fix(lua): use broadwell architecture when compiling lua for x86_64.
+  * feat(docker): try increasing a memlock limit in the container (#114)
+  * Fix prerelease docker pipeline
+  * Update response to HELLO command (#102)
+  * Update docker pipeline to support pre-releases as well
+  * Helm chart updates (v0.1.1, init command override, TLS configuration, CRs for ServiceMonitor and PrometheusRule objects) (#105)
+  * Factor out  theAPI readiness matrix into a separate doc (#103)
+  * Add FAQ (#64)
+  * Add Promehtues metrics for Grafana close #61 (#85)
+  * Fix Various Naming Conventions around `Subscriber` (#87)
+  * Add unstripped binary to allow optional profiling
+  * Fix bugs related to concurrency when saving multiple databases under … (#82)
+  * Implement PSUBSCRIBE/PUNSUBSCRIBE commands.
+
+ -- Roman Gershman <roman@dragonflydb.io>  Wed, 8 Jun 2022 08:46:48 +0300
+
+dragonfly (0.1.1) unstable; urgency=low
+  * Add unstripped binary to allow optional profiling
+  * docs: Fix a variable name for bucket in Dashtable section (#80)
+  * Initial commit for helm chart (#57) (#79)
+  * More printings in rdb_test in order to catch the snapshotting bug
+  * Improving Readability r3 (#75)
+  * Fixes #66. (#70)
+  * Update build steps for Ubuntu (#72)
+  * Add basic Prometheus support and metrics (#67)
+  * Fix a crash in debug mode when working with huge strings.
+  * Improve Comment Readability (#69)
+  * Add a debug assertion in order to chaise a bug when serialization finishes
+  * CI: Use v3 of Actions "upload-artifacts", "checkout" and "cache" (#62)
+  * docs: Repair Markdown markup (#63)
+  * Add romanger's twitter handle. We will post about DragonflyDb from his personal twitter.
+  * Update docker-release workflow to tag image with release version (#60)
+  * Update dragonfly blurb (#48)
+  * Improve readability (#52)
+  * Fix a spelling error (#50)
+  * Fix docker pipeline
+  * Fix info command to use git version (#49)
+  * Add a DCHECK to catch a bug
+
+ -- Roman Gershman <romange@gmail.com>  Fri, 3 Jun 2022 07:41:48 +0300
+
+dragonfly (0.1.0) unstable; urgency=low
+
+
+ -- Roman Gershman <romange@gmail.com>  Mon, 30 May 2022 12:30:00 +0300
+

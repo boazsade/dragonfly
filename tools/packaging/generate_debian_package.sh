@@ -56,7 +56,7 @@ mkdir -p ${BINARY_TARGET_DIR} || cleanup "failed to create install directory for
 
 cp ${VERSION_FILE} ${BINARY_TARGET_DIR}/dragonfly || cleanup "failed to copy binary to target dir"
 
-${BASE_PATH}/${CHANGELOG_SCRIPT} ${REPO_PATH} || cleanup "failed to generate changelog for package"
+#${BASE_PATH}/${CHANGELOG_SCRIPT} ${REPO_PATH} || cleanup "failed to generate changelog for package"
 
 MY_DIR=${PWD}
 cd ${BASE_PATH} && dpkg-buildpackage --build=binary || cleanup "failed to generate the package"

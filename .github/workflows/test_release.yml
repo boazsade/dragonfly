@@ -41,7 +41,6 @@ jobs:
           apt update && apt install -y moreutils debhelper
     - name: Build artifacts
       run: |
-          sudo apt-get install -y moreutils debhelper
           # Work around https://github.com/actions/checkout/issues/766
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git describe --always --tags ${{ github.sha }}
