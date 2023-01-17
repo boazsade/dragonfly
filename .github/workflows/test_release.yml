@@ -44,8 +44,8 @@ jobs:
           # Work around https://github.com/actions/checkout/issues/766
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git describe --always --tags ${{ github.sha }}
-          ./tools/packaging/generate_changelog.sh ${PWD}
-          ./tools/release.sh
+          ./tools/packaging/generate_changelog.sh ./
+          #./tools/release.sh
     - name: Generate packages
       run: |
           # once the build is over, we want to generate a Debian package
