@@ -19,7 +19,7 @@ jobs:
           omitBody: true
           prerelease: true
           draft: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.DRAGONFLY_PERSONAL_TOKEN }}
 
   build-qemu:
     runs-on: ubuntu-latest
@@ -134,4 +134,4 @@ jobs:
           draft: true
           prerelease: true
           omitNameDuringUpdate: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.DRAGONFLY_PERSONAL_TOKEN }}
