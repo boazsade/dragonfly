@@ -22,6 +22,11 @@ CHANGE_LOG=${PACKGE_DIR}/changelog
 echo "writing change to log ${CHANGE_LOG} based on data from ${GIT_DIR}"
 cd ${GIT_DIR}
 git config --global --add safe.directory ${GIT_DIR}
+git fetch --all --tags || {
+	echo "failed to fetch tags, cannot build changelog file"
+	exit 1
+}
+
 >${CHANGE_LOG}
 prevtag=v0.2.0
 pkgname=`cat ${PACKGE_DIR}/control | grep '^Package: ' | sed 's/^Package: //'`
