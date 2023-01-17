@@ -1,6 +1,8 @@
 name: Version Release
 
 on:
+  pull_request:
+    branches: '*'
   workflow_dispatch:
     inputs:
       git-ref:
