@@ -39,12 +39,12 @@ jobs:
     - name: Configure & Build
       run: |
           apt update && apt install -y debhelper moreutils
-          ./tools/tools/packaging/generate_changelog.sh ${PWD}
     - name: Build artifacts
       run: |
           # Work around https://github.com/actions/checkout/issues/766
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git describe --always --tags ${{ github.sha }}
+          ./tools/packaging/generate_changelog.sh ${PWD}
           ./tools/release.sh
     - name: Generate packages
       run: |
