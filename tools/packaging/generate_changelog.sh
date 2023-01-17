@@ -7,6 +7,7 @@
 # note: This script should run on branch "main".
 
 set -eu
+set -x
 
 if [ $# -ne 1 ]; then
 	echo "usage: <git repo path> <target path>"
