@@ -40,9 +40,9 @@ jobs:
       with:
         run: apt-get install debhelper
         shell: bash
-    # - name: Configure & Build
-    #   run: |
-    #       apt update && apt install -y moreutils debhelper
+    - name: Configure & Build
+      run: |
+          apt update && apt install -y moreutils debhelper
     - name: Build artifacts
       run: |
           # Work around https://github.com/actions/checkout/issues/766
