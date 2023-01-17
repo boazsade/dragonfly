@@ -38,7 +38,8 @@ jobs:
         submodules: true
     - name: Configure & Build
       run: |
-          apt update && apt install -y debhelper
+          apt update && apt install -y debhelper moreutils
+          ./tools/tools/packaging/generate_changelog.sh ${PWD}
     - name: Build artifacts
       run: |
           # Work around https://github.com/actions/checkout/issues/766
