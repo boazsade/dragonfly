@@ -19,7 +19,7 @@ THIS_DIR=$(dirname ${SCRIPT_ABS_PATH})
 GIT_DIR=$1
 PACKGE_DIR=${THIS_DIR}/debian
 CHANGE_LOG=${PACKGE_DIR}/changelog
-echo "writing change to log ${CHANGE_LOG} based on data from ${GIT_DIR}"
+#echo "writing change to log ${CHANGE_LOG} based on data from ${GIT_DIR}"
 cd ${GIT_DIR}
 git config --global --add safe.directory ${GIT_DIR}
 git fetch --all --tags || {
@@ -34,4 +34,4 @@ git tag -l v* | sort -V | while read tag; do
     (echo "$pkgname (${tag#v}) unstable; urgency=low"; git log --pretty=format:'  * %s' $prevtag..$tag; git log --pretty='format:%n%n -- %aN <%aE>  %aD%n%n' $tag^..$tag) | cat - ${CHANGE_LOG} | sponge ${CHANGE_LOG}
         prevtag=$tag
 done
-cat ${CHANGE_LOG}
+#cat ${CHANGE_LOG}

@@ -44,10 +44,9 @@ jobs:
           # Work around https://github.com/actions/checkout/issues/766
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git describe --always --tags ${{ github.sha }}
-          ./tools/packaging/generate_changelog.sh ./
+          ./tools/release.sh
     - name: Generate packages
       run: |
-          ./tools/release.sh
           # once the build is over, we want to generate a Debian package
           ./tools/packaging/generate_debian_package.sh build-opt/dragonfly-x86_64
     - name: Save artifacts
