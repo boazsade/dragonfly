@@ -38,15 +38,21 @@ jobs:
         submodules: true
     - name: Configure & Build
       run: |
-          apt update && apt install -y moreutils debhelper
+          apt update && apt install -y debhelper
     - name: Build artifacts
       run: |
           # Work around https://github.com/actions/checkout/issues/766
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git describe --always --tags ${{ github.sha }}
           ./tools/release.sh
+    - name: Generate packages
+      run: |
           # once the build is over, we want to generate a Debian package
           ./tools/packaging/generate_debian_package.sh build-opt/dragonfly-x86_64
-          # then place all artifacts at the same location
-          rm -rf results-artifacts && mkdir -p results-artifacts
+    - name: Save artifacts
+      run: |
+          # place all artifacts at the same location
+          mkdir -p results-artifacts
           mv build-opt/dragonfly-*tar.gz results-artifacts
+          mv dragonfly_*.deb results-artifacts
+          ls -lha results-artifacts/*
