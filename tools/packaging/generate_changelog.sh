@@ -7,7 +7,6 @@
 # note: This script should run on branch "main".
 
 set -eu
-set -x
 
 if [ $# -ne 1 ]; then
 	echo "usage: <git repo path> <target path>"
@@ -19,13 +18,15 @@ THIS_DIR=$(dirname ${SCRIPT_ABS_PATH})
 GIT_DIR=$1
 PACKGE_DIR=${THIS_DIR}/debian
 CHANGE_LOG=${PACKGE_DIR}/changelog
-#echo "writing change to log ${CHANGE_LOG} based on data from ${GIT_DIR}"
 cd ${GIT_DIR}
+has_tags=$(git tag -l v* | wc -l 2>/dev/null)
 git config --global --add safe.directory ${GIT_DIR}
-git fetch --all --tags || {
-	echo "failed to fetch tags, cannot build changelog file"
-	exit 1
-}
+if [ "$has_tags" = "" ]; then
+	git fetch --all --tags || {
+		echo "failed to fetch tags, cannot build changelog file"
+		exit 1
+	}
+fi
 
 >${CHANGE_LOG}
 prevtag=v0.2.0
@@ -34,4 +35,13 @@ git tag -l v* | sort -V | while read tag; do
     (echo "$pkgname (${tag#v}) unstable; urgency=low"; git log --pretty=format:'  * %s' $prevtag..$tag; git log --pretty='format:%n%n -- %aN <%aE>  %aD%n%n' $tag^..$tag) | cat - ${CHANGE_LOG} | sponge ${CHANGE_LOG}
         prevtag=$tag
 done
-#cat ${CHANGE_LOG}
+if [ -f ${CHANGE_LOG} ]; then
+	haslnes=$(wc -l ${CHANGE_LOG} 2>/dev/null | awk '{print $1}')
+	if [ "$haslnes" = "" ]; then
+		echo "empty file ${CHANGE_LOG}, failed to generate changelog"
+		exit 1
+	fi
+else
+	echo "failed to generate ${CHANGE_LOG}"
+	exit 1
+fi
