@@ -27,6 +27,9 @@ jobs:
           prerelease: true
           draft: true
           token: ${{ secrets.GITHUB_TOKEN }}
+        name: get tags
+        run: |
+          git fetch --all --tags
 
   build-qemu:
     runs-on: ubuntu-latest
