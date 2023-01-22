@@ -87,7 +87,7 @@ jobs:
               done
             fi
             ./tools/release.sh
-            ./tools/packaging/generate_debian_package.sh aarch64 build-opt/dragonfly-amd64
+            ./tools/packaging/generate_debian_package.sh aarch64 build-opt/dragonfly-aarch64
     - name: Save artifacts
       run: |
           # place all artifacts at the same location
