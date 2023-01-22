@@ -91,17 +91,15 @@ jobs:
     - name: Save artifacts
       run: |
           # place all artifacts at the same location
-          mkdir -p results-artifacts
-          mv build-opt/dragonfly-*tar.gz results-artifacts
-          mv dragonfly_*.deb results-artifacts
+          mv dragonfly_*.deb build-opt/
     - name: Upload
       uses: actions/upload-artifact@v3
       with:
         name: dragonfly-amd64
-        path: results-artifacts/*
+        path: build-opt/dragonfly-*tar.gz, build-opt/dragonfly_*.deb
     - name: Show the artifact
       # Items placed in /src/build-opt in the container will be in
       # ${PWD}/build-opt on the host.
       run: |
         echo finished
-        ls -alh results-artifacts/*
+        ls -lR artifacts/
