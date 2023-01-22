@@ -16,25 +16,25 @@ permissions:
   contents: write
 
 jobs:
-  create-release-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create Release Test
-        uses: ncipollo/release-action@v1
-        with:
-          allowUpdates: true
-          omitBody: true
-          prerelease: true
-          draft: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: get tags
-        run: |
-          git fetch --all --tags
+  #create-release-test:
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #    - name: Create Release Test
+  #      uses: ncipollo/release-action@v1
+  #      with:
+  #        allowUpdates: true
+  #        omitBody: true
+  #        prerelease: true
+  #        draft: true
+  #        token: ${{ secrets.GITHUB_TOKEN }}
+  #    - name: get tags
+  #      run: |
+  #        git fetch --all --tags
 
   build-qemu:
     runs-on: ubuntu-latest
     name: Build aarch64 on ubuntu20.04
-    needs: create-release-test
+      #needs: create-release-test
     steps:
     - uses: actions/checkout@v3
       with:
