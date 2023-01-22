@@ -27,7 +27,7 @@ jobs:
           prerelease: true
           draft: true
           token: ${{ secrets.GITHUB_TOKEN }}
-        name: get tags
+      - name: get tags
         run: |
           git fetch --all --tags
 
