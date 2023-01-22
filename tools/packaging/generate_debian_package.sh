@@ -17,6 +17,15 @@
 
 set -eu
 
+ARCH_VAL=amd64
+if [ $# -eq 1 ]; then
+	if [ "$1" != "${ARCH_VAL}" -a "$1" != "aarch64" ]; then
+		echo "error: invalid arch value can only be amd64 or aarch64"
+		exit 1
+	fi
+	ARCH_VAL=$1
+fi
+
 SCRIPT_ABS_PATH=$(realpath $0)
 SCRIPT_PATH=$(dirname ${SCRIPT_ABS_PATH})
 PACKAGES_PATH=${SCRIPT_PATH}/debian
@@ -26,7 +35,6 @@ ROOT_ABS_PATH=$(cd ${SCRIPT_PATH}; while [ ! -d ${BUILD_DIR} ]; do cd ..; done ;
 REPO_PATH=${ROOT_ABS_PATH}
 TEMP_WORK_DIR=$(mktemp -d)
 BASE_DIR=${TEMP_WORK_DIR}/packges
-ARCH_VAL=amd64
 BASE_PATH=${BASE_DIR}/dragonfly_${ARCH_VAL}
 BINARY_TARGET_DIR=${BASE_PATH}/debian/bin
 
@@ -36,8 +44,8 @@ function cleanup {
 	exit 1
 }
 
-if [ $# -ge 1 ]; then
-	VERSION_FILE=$1
+if [ $# -ge 2 ]; then
+	VERSION_FILE=$2
 else
 	if ! [ -f ${ROOT_ABS_PATH}/${BUILD_DIR}/dragonfly ]; then
 		cleanup "no dragonfly binary found at ${ROOT_ABS_PATH}/${BUILD_DIR}"
@@ -48,7 +56,7 @@ fi
 
 mkdir -p ${BASE_PATH} || cleanup "failed to create working directory for building the package"
 
-cp -r ${PACKAGES_PATH} ${BASE_PATH} || cleanup "failed to copy required for the package build from ${PACKAGES_PATH}"
+cp -r ${PACKAGES_PATH} ${BASE_PATH} || cleanup "failed to copy required files for the package build from ${PACKAGES_PATH}"
 
 cp ${SCRIPT_PATH}/${CHANGELOG_SCRIPT} ${BASE_PATH} || cleanup "failed to copy changelog script to ${BASE_PATH}"
 
