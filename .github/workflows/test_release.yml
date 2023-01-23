@@ -88,18 +88,18 @@ jobs:
             fi
             ./tools/release.sh
             ./tools/packaging/generate_debian_package.sh aarch64 build-opt/dragonfly-aarch64
-    - name: Save artifacts
-      run: |
           # place all artifacts at the same location
-          mv dragonfly_*.deb build-opt/
-    - name: Upload
-      uses: actions/upload-artifact@v3
-      with:
-        name: dragonfly-amd64
-        path: build-opt/dragonfly-*tar.gz, build-opt/dragonfly_*.deb
+            mv dragonfly_*.deb build-opt/
     - name: Show the artifact
       # Items placed in /src/build-opt in the container will be in
       # ${PWD}/build-opt on the host.
       run: |
         echo finished
-        ls -lR artifacts/
+        find . -name "*aarch64*"
+        find . -name "*.deb"
+        ls -lat build-opt/*
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: dragonfly-aarch64
+        path: build-opt/dragonfly-*tar.gz, build-opt/dragonfly_*.deb
