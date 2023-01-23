@@ -88,7 +88,6 @@ jobs:
             fi
             ./tools/release.sh
             ./tools/packaging/generate_debian_package.sh aarch64 build-opt/dragonfly-aarch64
-          # place all artifacts at the same location
             mv dragonfly_*.deb build-opt/
     - name: Show the artifact
       # Items placed in /src/build-opt in the container will be in
