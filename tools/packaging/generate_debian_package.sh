@@ -12,18 +12,21 @@
 # Please note that is must run from main branch.
 # Best running this from inside a container.
 # The result are writing to the location from which you would execute the script (not where the script is located).
-# Version number is the tag number. Currently this would only generate a package for amd64.
+# Version number is the tag number.
+# Params:
+#	* optional location to the binary to place at the package
 
 
 set -eu
 
 ARCH_VAL=amd64
-if [ $# -eq 1 ]; then
-	if [ "$1" != "${ARCH_VAL}" -a "$1" != "aarch64" ]; then
-		echo "error: invalid arch value can only be amd64 or aarch64"
-		exit 1
-	fi
-	ARCH_VAL=$1
+if [ "$(uname -m)" = "x86_64" ]; then
+	ARCH_VAL="amd64"
+elif [ "$(uname -m)" = "aarch64" ]; then
+	ARCH_VAL="aarch64"
+else
+	echo "Unknown architecture: $(uname -m). Only x86_64 and aarch64 are supported."
+        exit 1
 fi
 
 SCRIPT_ABS_PATH=$(realpath $0)
@@ -44,8 +47,8 @@ function cleanup {
 	exit 1
 }
 
-if [ $# -ge 2 ]; then
-	VERSION_FILE=$2
+if [ $# -ge 1 ]; then
+	VERSION_FILE=$1
 else
 	if ! [ -f ${ROOT_ABS_PATH}/${BUILD_DIR}/dragonfly ]; then
 		cleanup "no dragonfly binary found at ${ROOT_ABS_PATH}/${BUILD_DIR}"
