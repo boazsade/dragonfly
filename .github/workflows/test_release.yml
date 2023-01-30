@@ -1,5 +1,4 @@
-name: Test Only please remove me
-
+name: Version Release
 on:
   pull_request:
     branches: '*'
@@ -8,33 +7,14 @@ on:
       git-ref:
         description: Git Ref (Optional)
         required: false
-#  push:
-#    tags:
-#    - 'v*'
 
 permissions:
   contents: write
 
-jobs:
-  #create-release-test:
-  #  runs-on: ubuntu-latest
-  #  steps:
-  #    - name: Create Release Test
-  #      uses: ncipollo/release-action@v1
-  #      with:
-  #        allowUpdates: true
-  #        omitBody: true
-  #        prerelease: true
-  #        draft: true
-  #        token: ${{ secrets.GITHUB_TOKEN }}
-  #    - name: get tags
-  #      run: |
-  #        git fetch --all --tags
-
   build-qemu:
     runs-on: ubuntu-latest
     name: Build aarch64 on ubuntu20.04
-      #needs: create-release-test
+    needs: create-release
     steps:
     - uses: actions/checkout@v3
       with:
@@ -87,18 +67,11 @@ jobs:
               done
             fi
             ./tools/release.sh
-            ./tools/packaging/generate_debian_package.sh aarch64 build-opt/dragonfly-aarch64
+            ./tools/packaging/generate_debian_package.sh build-opt/dragonfly-aarch64
             mv dragonfly_*.deb build-opt/
     - name: Show the artifact
       # Items placed in /src/build-opt in the container will be in
       # ${PWD}/build-opt on the host.
       run: |
         echo finished
-        find . -name "*aarch64*"
-        find . -name "*.deb"
-        ls -lat build-opt/*
-    - name: Upload
-      uses: actions/upload-artifact@v3
-      with:
-        name: dragonfly-aarch64
-        path: build-opt/dragonfly-*tar.gz, build-opt/dragonfly_*.deb
+        ls -al
