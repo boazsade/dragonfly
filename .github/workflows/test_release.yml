@@ -11,6 +11,7 @@ on:
 permissions:
   contents: write
 
+jobs:
   build-qemu:
     runs-on: ubuntu-latest
     name: Build aarch64 on ubuntu20.04
