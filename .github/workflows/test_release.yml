@@ -76,4 +76,4 @@ jobs:
       # ${PWD}/build-opt on the host.
       run: |
         echo finished
-        ls -al
+        ls -al build-opt/dragonfly*
