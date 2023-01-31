@@ -77,3 +77,11 @@ jobs:
       run: |
         echo finished
         ls -al build-opt/dragonfly*
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: dragonfly-aarch64
+        path: |
+          build-opt/dragonfly-*tar.gz
+          build-opt/dragonfly_*.deb
+
