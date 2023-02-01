@@ -2,7 +2,7 @@ name: Test Only please remove me
 
 on:
   pull_request:
-    branches: '*'
+    branches: 'foo'
   workflow_dispatch:
     inputs:
       git-ref:
